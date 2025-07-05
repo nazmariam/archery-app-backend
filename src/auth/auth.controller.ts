@@ -5,15 +5,20 @@ import {
   Get,
   UseGuards,
   Request,
+  Res,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserLoginDto } from './dto/user-login.dto';
 import { AuthGuard } from '@nestjs/passport';
-import { Request as ExpressRequest } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
+import { ConfigService } from '@nestjs/config';
 
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly configService: ConfigService,
+  ) {}
 
   @Post('login')
   async login(
@@ -28,10 +33,10 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleAuthRedirect(@Request() req: ExpressRequest) {
-    return {
-      message: 'User info from Google',
-      user: req.user,
-    };
+  async googleAuthRedirect(@Request() req: ExpressRequest, @Res() res: Response) {
+    const { user, jwt } = req.user as any;
+    const frontendUrl = this.configService.get<string>('FRONTEND_URL');
+    
+    res.redirect(`${frontendUrl}/auth/google/callback?token=${jwt}`);
   }
 }

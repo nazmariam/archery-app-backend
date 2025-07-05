@@ -28,6 +28,15 @@ export class User {
   @Property({ nullable: true })
   picture?: string;
 
+  @Property({ nullable: true })
+  bio?: string;
+
+  @Property({ nullable: true })
+  location?: string;
+
+  @Property({ nullable: true })
+  website?: string;
+
   @Property({ onCreate: () => new Date() })
   createdAt: Date = new Date();
 
