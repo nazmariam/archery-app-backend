@@ -8,6 +8,7 @@ import {
   Res,
   HttpCode,
   HttpStatus,
+  Param,
 } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { UserLoginDto } from './dto/user-login.dto';
@@ -16,8 +17,11 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { SetPasswordDto } from './dto/set-password.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { RolesGuard } from './guards/roles.guard';
+import { Roles } from './decorators/roles.decorator';
 import { Request as ExpressRequest, Response } from 'express';
 import { ConfigService } from '@nestjs/config';
+import { Roles as UserRoles } from '../user/types';
 
 @Controller('auth')
 export class AuthController {
@@ -74,5 +78,15 @@ export class AuthController {
     const frontendUrl = this.configService.get<string>('FRONTEND_URL');
 
     res.redirect(`${frontendUrl}/auth/google/callback?token=${jwt}`);
+  }
+
+  @Post('admin/reset-password/:userId')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.Admin)
+  @HttpCode(HttpStatus.OK)
+  async adminResetUserPassword(
+    @Param('userId') userId: string,
+  ): Promise<{ message: string }> {
+    return this.authService.adminResetUserPassword(userId);
   }
 }

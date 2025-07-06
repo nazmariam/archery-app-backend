@@ -191,4 +191,30 @@ export class UserService {
 
     await this.entityManager.persistAndFlush(user);
   }
+
+  async getAllUsers(): Promise<User[]> {
+    return this.entityManager.find(User, {});
+  }
+
+  async adminUpdateUser(id: string, updateData: UpdateUserDto): Promise<User> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    Object.assign(user, updateData);
+    user.updatedAt = new Date();
+
+    await this.entityManager.persistAndFlush(user);
+    return user;
+  }
+
+  async remove(id: string): Promise<void> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    await this.entityManager.removeAndFlush(user);
+  }
 }

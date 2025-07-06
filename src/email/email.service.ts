@@ -37,6 +37,9 @@ export class EmailService {
         user,
         pass,
       },
+      tls: {
+        rejectUnauthorized: false, // Temporary fix for TLS certificate issues
+      },
     });
 
     this.transporter.verify((error) => {

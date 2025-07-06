@@ -1,56 +1,59 @@
 import {
-  Body,
   Controller,
   Get,
   Post,
-  Put,
+  Body,
+  Patch,
+  Param,
+  Delete,
   UseGuards,
   Request,
-  HttpCode,
-  HttpStatus,
 } from '@nestjs/common';
 import { UserService } from './user.service';
-import { User } from './entity/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { Request as ExpressRequest } from 'express';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { Roles as UserRoles } from './types';
 
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  getProfile(@Request() req: ExpressRequest): User {
-    return req.user as User;
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Put('profile')
-  async updateProfile(
-    @Request() req: ExpressRequest,
-    @Body() updateData: UpdateUserDto,
-  ): Promise<User> {
-    const user = req.user as User;
-    return this.userService.update(user.id, updateData);
-  }
-
-  @UseGuards(JwtAuthGuard)
-  @Put('change-password')
-  @HttpCode(HttpStatus.OK)
-  async changePassword(
-    @Request() req: ExpressRequest,
-    @Body() passwordData: ChangePasswordDto,
-  ): Promise<{ message: string }> {
-    const user = req.user as User;
-    await this.userService.changePassword(user.id, passwordData);
-    return { message: 'Password changed successfully' };
-  }
-
   @Post()
-  async createUser(@Body() userData: CreateUserDto): Promise<User> {
-    return this.userService.create(userData);
+  create(@Body() createUserDto: CreateUserDto) {
+    return this.userService.create(createUserDto);
+  }
+
+  @Get('profile')
+  @UseGuards(JwtAuthGuard)
+  getProfile(@Request() req: any) {
+    return this.userService.findById(req.user.sub);
+  }
+
+  @Patch('profile')
+  @UseGuards(JwtAuthGuard)
+  updateProfile(@Request() req: any, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.update(req.user.sub, updateUserDto);
+  }
+
+  @Delete(':id')
+  remove(@Param('id') id: string) {
+    return this.userService.remove(id);
+  }
+
+  @Get('admin/all')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.Admin)
+  getAllUsers() {
+    return this.userService.getAllUsers();
+  }
+
+  @Patch('admin/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRoles.Admin)
+  adminUpdateUser(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
+    return this.userService.adminUpdateUser(id, updateUserDto);
   }
 }

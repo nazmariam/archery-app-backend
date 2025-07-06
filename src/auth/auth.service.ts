@@ -156,4 +156,40 @@ export class AuthService {
 
     return { message: 'Password has been set successfully' };
   }
+
+  async adminResetUserPassword(userId: string): Promise<{ message: string }> {
+    const user = await this.userService.findById(userId);
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const resetToken = randomBytes(32).toString('hex');
+    const resetPasswordExpires = new Date(Date.now() + 3600000); // 1 hour
+
+    await this.userService.setResetPasswordToken(
+      user.id,
+      resetToken,
+      resetPasswordExpires,
+    );
+
+    const resetUrl = `${this.configService.get<string>('FRONTEND_URL')}/reset-password?token=${resetToken}`;
+
+    try {
+      await this.emailService.sendPasswordResetEmail(
+        user.email,
+        resetToken,
+        resetUrl,
+      );
+    } catch {
+      await this.userService.clearResetPasswordToken(user.id);
+      throw new Error(
+        'Failed to send password reset email. Please try again later.',
+      );
+    }
+
+    return {
+      message: 'Password reset email has been sent to the user',
+    };
+  }
 }

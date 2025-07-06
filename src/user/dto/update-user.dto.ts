@@ -24,4 +24,8 @@ export class UpdateUserDto {
   @IsUrl()
   @IsOptional()
   picture?: string;
+
+  @IsString()
+  @IsOptional()
+  role?: string;
 }
