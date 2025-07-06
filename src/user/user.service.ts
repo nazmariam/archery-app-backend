@@ -1,8 +1,9 @@
-import { Injectable, ConflictException, BadRequestException, NotFoundException } from '@nestjs/common';
+import { Injectable, ConflictException, BadRequestException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { EntityManager } from '@mikro-orm/core';
 import { User } from './entity/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { Roles } from './types';
 import * as bcrypt from 'bcrypt';
 
@@ -54,5 +55,41 @@ export class UserService {
 
     await this.entityManager.persistAndFlush(user);
     return user;
+  }
+
+  async changePassword(id: string, passwordData: ChangePasswordDto): Promise<void> {
+    const user = await this.findById(id);
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (!user.password) {
+      throw new UnauthorizedException('User does not have a password set (OAuth user)');
+    }
+
+    const isCurrentPasswordValid = await bcrypt.compare(passwordData.currentPassword, user.password);
+    if (!isCurrentPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      throw new BadRequestException('New password and confirmation do not match');
+    }
+
+    if (passwordData.newPassword.length < 8) {
+      throw new BadRequestException('New password must be at least 8 characters long');
+    }
+
+    const isSamePassword = await bcrypt.compare(passwordData.newPassword, user.password);
+    if (isSamePassword) {
+      throw new BadRequestException('New password must be different from current password');
+    }
+
+    const hashedNewPassword = await bcrypt.hash(passwordData.newPassword, 10);
+
+    user.password = hashedNewPassword;
+    user.updatedAt = new Date();
+
+    await this.entityManager.persistAndFlush(user);
   }
 }
