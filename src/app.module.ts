@@ -4,9 +4,9 @@ import { AppService } from './app.service';
 import { MikroOrmModule } from '@mikro-orm/nestjs';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { EmailModule } from './email/email.module';
+import { ConfigModule } from '@nestjs/config';
 import { envSchema } from './config/env.zod';
-import { JwtModule } from '@nestjs/jwt';
 
 @Module({
   imports: [
@@ -25,6 +25,7 @@ import { JwtModule } from '@nestjs/jwt';
     MikroOrmModule.forRoot(),
     UserModule,
     AuthModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService],

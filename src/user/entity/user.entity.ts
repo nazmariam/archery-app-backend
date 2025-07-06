@@ -1,6 +1,6 @@
 import { Entity, PrimaryKey, Property } from '@mikro-orm/core';
 import { v4 as uuid } from 'uuid';
-import { AuthProvider, AuthProviders, Role, Roles } from '../types';
+import { AuthProvider, AuthProviders } from '../types';
 
 @Entity()
 export class User {
@@ -36,6 +36,12 @@ export class User {
 
   @Property({ nullable: true })
   website?: string;
+
+  @Property({ nullable: true })
+  resetPasswordToken?: string;
+
+  @Property({ nullable: true })
+  resetPasswordExpires?: Date;
 
   @Property({ onCreate: () => new Date() })
   createdAt: Date = new Date();
