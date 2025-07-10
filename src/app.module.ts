@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { EmailModule } from './email/email.module';
 import { ConfigModule } from '@nestjs/config';
 import { envSchema } from './config/env.zod';
+import { TournamentModule } from './tournament/tournament.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { envSchema } from './config/env.zod';
     UserModule,
     AuthModule,
     EmailModule,
+    TournamentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
